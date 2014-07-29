@@ -21,8 +21,7 @@ import com.codahale.metrics.Timer;
  */
 @Immutable
 @ThreadSafe
-public final class BasicInstrumentation
-{
+public final class BasicInstrumentation {
     private final Counter totalInvocations;
     private final Counter totalFailures;
 
@@ -39,19 +38,19 @@ public final class BasicInstrumentation
         this.elapsed = registry.timer( name( baseMetricName, "elapsed" ) );
     }
 
-    public void markInvoked( ) {
+    public void markInvoked() {
         this.totalInvocations.inc();
         this.invocationsPerSecond.mark();
     }
 
-    public void markFailed( ) {
+    public void markFailed() {
         this.totalFailures.inc();
         this.failuresPerSecond.mark();
     }
 
     /** Opens new timer context that needs to be closed by the caller */
     @WillNotClose
-    public Timer.Context openTimerContext( ) {
+    public Timer.Context openTimerContext() {
         return elapsed.time();
     }
 }

@@ -1,6 +1,7 @@
 package com.tguzik.metrics;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
