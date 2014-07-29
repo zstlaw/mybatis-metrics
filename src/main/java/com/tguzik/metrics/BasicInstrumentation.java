@@ -2,6 +2,8 @@ package com.tguzik.metrics;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
+import javax.annotation.Nonnull;
+import javax.annotation.WillNotClose;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -29,7 +31,7 @@ public final class BasicInstrumentation
 
     private final Timer elapsed;
 
-    public BasicInstrumentation( MetricRegistry registry, String baseMetricName ) {
+    public BasicInstrumentation( @Nonnull MetricRegistry registry, @Nonnull String baseMetricName ) {
         this.totalInvocations = registry.counter( name( baseMetricName, "totalInvocations" ) );
         this.totalFailures = registry.counter( name( baseMetricName, "totalFailures" ) );
         this.invocationsPerSecond = registry.meter( name( baseMetricName, "invocationsPerSecond" ) );
@@ -47,6 +49,8 @@ public final class BasicInstrumentation
         this.failuresPerSecond.mark();
     }
 
+    /** Opens new timer context that needs to be closed by the caller */
+    @WillNotClose
     public Timer.Context openTimerContext( ) {
         return elapsed.time();
     }
