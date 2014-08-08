@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.tguzik.metrics.mybatis.BasicInstrumentation;
 import org.junit.Before;
 import org.junit.Test;
 

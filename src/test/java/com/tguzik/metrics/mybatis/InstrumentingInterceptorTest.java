@@ -1,7 +1,6 @@
 package com.tguzik.metrics.mybatis;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
@@ -154,9 +153,10 @@ public class InstrumentingInterceptorTest {
 
     @Test
     public void testDeriveMetricName() throws Exception {
+        String expectedName = "com.tguzik.metrics.mybatis.InstrumentingInterceptorTest$FakeMapper#doSomething";
         String actualName = interceptor.deriveMetricName( invocation );
 
-        assertEquals( "com.tguzik.metrics.mybatis.InstrumentingInterceptorTest$FakeMapper#doSomething", actualName );
+        assertThat( actualName ).isEqualTo( expectedName );
     }
 
     public static class FakeMapper {
