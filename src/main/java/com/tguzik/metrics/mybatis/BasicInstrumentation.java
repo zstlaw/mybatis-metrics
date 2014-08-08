@@ -1,4 +1,4 @@
-package com.tguzik.metrics;
+package com.tguzik.metrics.mybatis;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
