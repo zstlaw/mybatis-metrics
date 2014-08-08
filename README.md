@@ -10,7 +10,7 @@ Can I use this in Production? Are there any skeletons in the closet?
 No, please don't. Some of the functionality and actual integration with the actual MyBatis library still remains to 
 be tested. Please don't use this library in Production yet. 
 
-As for the limitations of the current incarnation of this library, please see the <LIMITATIONS.md> file.
+As for the limitations of the current incarnation of this library, please see the [LIMITATIONS.md](LIMITATIONS.md) file.
 
 
 How do I get it?
