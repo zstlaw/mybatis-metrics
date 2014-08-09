@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tguzik.mybatismetrics.integrationtests.filebasedbootstrap.FakeMapper">
+    <!-- Remember that this will use private in-memory database -->
+    <!-- There should be one table created by this statement: -->
+    <!--    create table test (key varchar(20), value varchar(20))    -->
+
+    <select id="doSelect" resultType="int">
+        select count(*) from test
+    </select>
+
+    <insert id="doInsert">
+        insert into test (key, value) values ('key', 'value')
+    </insert>
+
+    <update id="doUpdate">
+        update test set value = 'new value'
+    </update>
+
+    <delete id="doDelete">
+        delete from test
+    </delete>
+</mapper>

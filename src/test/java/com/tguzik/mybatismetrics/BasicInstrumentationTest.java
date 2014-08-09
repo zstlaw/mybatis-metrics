@@ -1,4 +1,4 @@
-package com.tguzik.metrics.mybatis;
+package com.tguzik.mybatismetrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;

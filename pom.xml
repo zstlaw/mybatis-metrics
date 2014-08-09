@@ -107,10 +107,26 @@
             <version>2.3.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.6</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <defaultGoal>package</defaultGoal>
+
+        <testResources>
+            <testResource>
+                <directory>${project.build.testSourceDirectory}</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                </includes>
+            </testResource>
+        </testResources>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -128,13 +144,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.7.1</version>
-                <configuration>
-                    <parallel>classes</parallel>
-                    <failIfNoTests>true</failIfNoTests>
-                    <useUnlimitedThreads>true</useUnlimitedThreads>
-                    <forkedProcessTimeoutInSeconds>60</forkedProcessTimeoutInSeconds>
-                    <useFile>false</useFile>
-                </configuration>
             </plugin>
         </plugins>
     </build>

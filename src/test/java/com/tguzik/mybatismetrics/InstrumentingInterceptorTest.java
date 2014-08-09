@@ -1,4 +1,4 @@
-package com.tguzik.metrics.mybatis;
+package com.tguzik.mybatismetrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -38,7 +38,7 @@ public class InstrumentingInterceptorTest {
     @Test
     public void testIntercept_marksMetrics() throws Throwable {
         // Prepare test by fetching appropriate metrics from the registry
-        String baseMetricName = "com.tguzik.metrics.mybatis.InstrumentingInterceptorTest$FakeMapper#doSomething";
+        String baseMetricName = "com.tguzik.mybatismetrics.InstrumentingInterceptorTest$FakeMapper#doSomething";
         Meter invocationsPerSecond = metricRegistry.meter( baseMetricName + ".invocationsPerSecond" );
         Meter failuresPerSecond = metricRegistry.meter( baseMetricName + ".failuresPerSecond" );
         Counter invocations = metricRegistry.counter( baseMetricName + ".totalInvocations" );
@@ -69,7 +69,7 @@ public class InstrumentingInterceptorTest {
     @Test
     public void testIntercept_marksMetrics_exceptionFromMapper() throws Throwable {
         // Prepare test by fetching appropriate metrics from the registry
-        String baseMetricName = "com.tguzik.metrics.mybatis.InstrumentingInterceptorTest$FakeMapper#doSomething";
+        String baseMetricName = "com.tguzik.mybatismetrics.InstrumentingInterceptorTest$FakeMapper#doSomething";
         Meter invocationsPerSecond = metricRegistry.meter( baseMetricName + ".invocationsPerSecond" );
         Meter failuresPerSecond = metricRegistry.meter( baseMetricName + ".failuresPerSecond" );
         Counter invocations = metricRegistry.counter( baseMetricName + ".totalInvocations" );
@@ -153,7 +153,7 @@ public class InstrumentingInterceptorTest {
 
     @Test
     public void testDeriveMetricName() throws Exception {
-        String expectedName = "com.tguzik.metrics.mybatis.InstrumentingInterceptorTest$FakeMapper#doSomething";
+        String expectedName = "com.tguzik.mybatismetrics.InstrumentingInterceptorTest$FakeMapper#doSomething";
         String actualName = interceptor.deriveMetricName( invocation );
 
         assertThat( actualName ).isEqualTo( expectedName );

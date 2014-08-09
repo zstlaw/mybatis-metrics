@@ -1,8 +1,9 @@
-package com.tguzik.metrics.mybatis;
+package com.tguzik.mybatismetrics;
 
 import static com.tguzik.annotations.ExpectedPerformanceProfile.Path;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.lang.reflect.Method;
 import java.util.Properties;
@@ -96,8 +97,9 @@ public class InstrumentingInterceptor implements Interceptor {
      * This class doesn't need to do that, so it just returns what it was given.
      */
     @Override
-    public Object plugin( Object target ) {
-        logger.debug( "{}#plugin( {} )", getClass().getSimpleName(), target );
+    @Nullable
+    public Object plugin( @Nullable Object target ) {
+        logger.debug( "{}#plugin(): {}", getClass().getSimpleName(), target );
         return target;
     }
 
