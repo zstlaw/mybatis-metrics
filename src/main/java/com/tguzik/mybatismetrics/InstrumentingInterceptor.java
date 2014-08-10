@@ -3,22 +3,18 @@ package com.tguzik.mybatismetrics;
 import static com.tguzik.annotations.ExpectedPerformanceProfile.Path;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.lang.reflect.Method;
 import java.util.Properties;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.tguzik.annotations.ExpectedPerformanceProfile;
+import com.tguzik.annotations.RefactorThis;
 import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.plugin.Interceptor;
-import org.apache.ibatis.plugin.Intercepts;
-import org.apache.ibatis.plugin.Invocation;
-import org.apache.ibatis.plugin.Signature;
+import org.apache.ibatis.plugin.*;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.slf4j.Logger;
@@ -52,7 +48,10 @@ import org.slf4j.LoggerFactory;
                            method = "query",
                            args = { MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class } ) //
              } )
+@RefactorThis( "Class turned out to be semi-ugly. Refactor it to be prettier." )
 public class InstrumentingInterceptor implements Interceptor {
+    protected static final String INVALID_INVOCATION_METRIC_NAME = "mybatis-metrics.invocations.invalid";
+
     /** Metric registry to be used to store all metrics. */
     private final MetricRegistry metricRegistry;
 
@@ -97,10 +96,10 @@ public class InstrumentingInterceptor implements Interceptor {
      * This class doesn't need to do that, so it just returns what it was given.
      */
     @Override
-    @Nullable
-    public Object plugin( @Nullable Object target ) {
-        logger.debug( "{}#plugin(): {}", getClass().getSimpleName(), target );
-        return target;
+    @ExpectedPerformanceProfile( path = Path.COLD )
+    public Object plugin( Object target ) {
+        logger.trace( "{}#plugin(): ", getClass().getSimpleName(), target.getClass().getName() );
+        return Plugin.wrap( target, this );
     }
 
     /**
@@ -114,22 +113,8 @@ public class InstrumentingInterceptor implements Interceptor {
     @Override
     @ExpectedPerformanceProfile( path = Path.COLD )
     public void setProperties( Properties properties ) {
-        logger.debug( "{}#setProperties( {} )", getClass().getSimpleName(), properties );
+        logger.trace( "{}#setProperties( {} )", getClass().getSimpleName(), properties );
     }
-
-    /* So here's the deal, class for Invocation does not override .hashCode() method, which means
-     * that if we wanted to create a cache for instances of BasicInstrumentation (one instance
-     * of BasicInstrumentation per one mapper method), we would have to calculate its identity
-     * on each invocation of this method. While doing so on just hash codes of the method (part
-     * of Invocation instance) and its containing class, it would be also beneficial to go through
-     * method arguments... which all in all is quite a bit of work just to reuse instances of
-     * BasicInstrumentation that frankly I'd like to avoid (it's messy and it's not our ultimate
-     * objective). While this might change once this code is profiled, for now let's just
-     * create new instance of BasicInstrumentation and use it as if it came from cache.
-     *
-     * Basically using cache vs. creating instances would come down to what is faster. However,
-     * considering where this library is right now, let's just do what is simpler.
-     */
 
     /**
      * Retrieves or creates an instance of {@link BasicInstrumentation} to be used. Code on hot
@@ -138,6 +123,20 @@ public class InstrumentingInterceptor implements Interceptor {
     @Nonnull
     @ExpectedPerformanceProfile( path = Path.HOT )
     protected BasicInstrumentation getInstrumentation( @Nonnull Invocation invocation ) {
+        /* So here's the deal, class for Invocation does not override .hashCode() method, which means
+         * that if we wanted to create a cache for instances of BasicInstrumentation (one instance
+         * of BasicInstrumentation per one mapper method), we would have to calculate its identity
+         * on each invocation of this method. While doing so on just hash codes of the method (part
+         * of Invocation instance) and its containing class, it would be also beneficial to go through
+         * method arguments... which all in all is quite a bit of work just to reuse instances of
+         * BasicInstrumentation that frankly I'd like to avoid (it's messy and it's not our ultimate
+         * objective). While this might change once this code is profiled, for now let's just
+         * create new instance of BasicInstrumentation and use it as if it came from cache.
+         *
+         * Basically using cache vs. creating instances would come down to what is faster. However,
+         * considering where this library is right now, let's just do what is simpler.
+         */
+
         return new BasicInstrumentation( getRegistry(), deriveMetricName( invocation ) );
     }
 
@@ -146,9 +145,41 @@ public class InstrumentingInterceptor implements Interceptor {
         return metricRegistry;
     }
 
-    /** Used to determine metric names. Override this method if you want to implement a custom name template */
+    /**
+     * Used to determine metric names. Override this method if you want to implement a custom name template
+     * <p/>
+     * When we get instance of Invocation, the value in {@link Invocation#target} is an implementation of
+     * {@link org.apache.ibatis.executor.Executor}, it's {@link Invocation#method} is one of {@link Executor#query}
+     * methods and finally, the {@link Invocation#args} array contains parameters <i>not</i> for the original MyBatis
+     * Mapper that issued the call, <i>but instead</i> contains the parameters of the
+     * {@link org.apache.ibatis.executor.Executor#query} method. While this is logical from framework
+     * designer's perspective, it may not be your first guess. Lack of type safety only exacerbates this fact.
+     * <p/>
+     * This can, of course, change when this class (or a decorator to this class) changes the contents of the class
+     * annotation {@link org.apache.ibatis.plugin.Intercepts}.
+     * <p/>
+     * Remember that we're basically using a private API that can change at any time for any reason!.
+     */
     protected String deriveMetricName( Invocation invocation ) {
-        Method method = invocation.getMethod();
-        return String.format( "%s#%s", method.getDeclaringClass().getTypeName(), method.getName() );
+        /* ...and here we have some black magic that we love MyBatis for... */
+        if ( firstArgumentIsMappedStatement( invocation ) ) {
+            MappedStatement statement = (MappedStatement) invocation.getArgs()[ 0 ];
+            return statement.getId();
+        }
+
+        /* Well, we're fsck'd. We can't make any assumptions on the argument names, so we don't know what is
+         * the specific name for this query We could throw an exception, but that would also screw over the end
+         * user. For now let's just complain loudly and use a BS metric name. We might want to revisit this part
+         * in the future
+         */
+        logger.warn( "Received invocation for unknown or invalid target. Did MyBatis implementation change? I'll " +
+                     "use metric name '" + INVALID_INVOCATION_METRIC_NAME + "' instead." );
+        return INVALID_INVOCATION_METRIC_NAME;
+    }
+
+    protected boolean firstArgumentIsMappedStatement( Invocation invocation ) {
+        return invocation != null && //
+               invocation.getArgs() != null && //
+               invocation.getArgs()[ 0 ] instanceof MappedStatement;
     }
 }

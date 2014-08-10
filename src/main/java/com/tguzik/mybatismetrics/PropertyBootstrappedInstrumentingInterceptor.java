@@ -13,10 +13,7 @@ import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.plugin.Interceptor;
-import org.apache.ibatis.plugin.Intercepts;
-import org.apache.ibatis.plugin.Invocation;
-import org.apache.ibatis.plugin.Signature;
+import org.apache.ibatis.plugin.*;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.slf4j.Logger;
@@ -58,19 +55,19 @@ import org.slf4j.LoggerFactory;
  * @author Tomasz Guzik <tomek@tguzik.com>
  */
 /* as far as I know there's no way to set it up to 'intercept everything' in one line :( */
-@Intercepts( { //
-               @Signature(
-                       type = Executor.class,
-                       method = "update",
-                       args = { MappedStatement.class, Object.class } ), //
-               @Signature( type = Executor.class,
-                           method = "query",
-                           args = { MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class,
-                                    CacheKey.class, BoundSql.class } ), //
-               @Signature( type = Executor.class,
-                           method = "query",
-                           args = { MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class } ) //
-             } )
+@Intercepts({ //
+              @Signature(
+                      type = Executor.class,
+                      method = "update",
+                      args = { MappedStatement.class, Object.class }), //
+              @Signature(type = Executor.class,
+                         method = "query",
+                         args = { MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class,
+                                  CacheKey.class, BoundSql.class }), //
+              @Signature(type = Executor.class,
+                         method = "query",
+                         args = { MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class }) //
+            })
 public class PropertyBootstrappedInstrumentingInterceptor implements Interceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger( PropertyBootstrappedInstrumentingInterceptor.class );
     private static final String PROPERTY_NAME = "metrics.registry.provider";
@@ -83,7 +80,7 @@ public class PropertyBootstrappedInstrumentingInterceptor implements Interceptor
     }
 
     @Override
-    @ExpectedPerformanceProfile( path = ExpectedPerformanceProfile.Path.HOT )
+    @ExpectedPerformanceProfile(path = ExpectedPerformanceProfile.Path.HOT)
     public Object intercept( Invocation invocation ) throws Throwable {
         // Get the reference
         Interceptor interceptor = interceptorReference.get();
@@ -102,13 +99,13 @@ public class PropertyBootstrappedInstrumentingInterceptor implements Interceptor
     @Override
     @Nullable
     public Object plugin( @Nullable Object target ) {
-        Interceptor interceptor = interceptorReference.get();
-        return (interceptor == null) ? target : interceptor.plugin( target );
+        LOGGER.trace( "{}#plugin(): ", getClass().getSimpleName(), target.getClass().getName() );
+        return Plugin.wrap( target, this );
     }
 
     @Override
-    @RefactorThis( "This method has a subtle race condition. While it's a low priority item, " +
-                   "it should be removed eventually." )
+    @RefactorThis("This method has a subtle race condition. While it's a low priority item, " +
+                  "it should be removed eventually.")
     public void setProperties( @Nullable Properties properties ) {
         LOGGER.trace( "setProperties(): {}", properties );
 

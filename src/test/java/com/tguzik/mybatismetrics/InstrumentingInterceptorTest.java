@@ -2,90 +2,84 @@ package com.tguzik.mybatismetrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
+import org.apache.ibatis.cache.CacheKey;
+import org.apache.ibatis.executor.Executor;
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.SqlCommandType;
+import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.plugin.Invocation;
+import org.apache.ibatis.scripting.LanguageDriver;
+import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.session.ResultHandler;
+import org.apache.ibatis.session.RowBounds;
 import org.junit.Before;
 import org.junit.Test;
 
 public class InstrumentingInterceptorTest {
     private InstrumentingInterceptor interceptor;
     private MetricRegistry metricRegistry;
+
+    private MappedStatement fakeStatement;
     private Invocation invocation;
-    private FakeMapper fakeMapper;
+    private Executor fakeExecutor;
 
     @Before
     public void setUp() throws Exception {
         this.metricRegistry = new MetricRegistry();
         this.interceptor = new InstrumentingInterceptor( metricRegistry );
-        this.fakeMapper = mock( FakeMapper.class );
-        this.invocation = new Invocation( fakeMapper,
-                                          FakeMapper.class.getDeclaredMethod( "doSomething",
-                                                                              String.class,
-                                                                              int.class,
-                                                                              int.class ),
-                                          new Object[] { "arg1", 2, 3 } );
+        this.fakeExecutor = mock( Executor.class );
+        this.fakeStatement = new MappedStatement.Builder( mock( Configuration.class ),
+                                                          "statement id",
+                                                          mock( SqlSource.class ),
+                                                          SqlCommandType.SELECT ).lang( mock( LanguageDriver.class ) )
+                                                                                 .build();
+        this.invocation = new Invocation( fakeExecutor,
+                                          Executor.class.getDeclaredMethod( "query",
+                                                                            MappedStatement.class,
+                                                                            Object.class,
+                                                                            RowBounds.class,
+                                                                            ResultHandler.class,
+                                                                            CacheKey.class,
+                                                                            BoundSql.class ),
+                                          new Object[] { fakeStatement, null, null, null, null, null } );
     }
 
     @Test
     public void testIntercept_marksMetrics() throws Throwable {
-        // Prepare test by fetching appropriate metrics from the registry
-        String baseMetricName = "com.tguzik.mybatismetrics.InstrumentingInterceptorTest$FakeMapper#doSomething";
-        Meter invocationsPerSecond = metricRegistry.meter( baseMetricName + ".invocationsPerSecond" );
-        Meter failuresPerSecond = metricRegistry.meter( baseMetricName + ".failuresPerSecond" );
-        Counter invocations = metricRegistry.counter( baseMetricName + ".totalInvocations" );
-        Counter failures = metricRegistry.counter( baseMetricName + ".totalFailures" );
-        Timer timer = metricRegistry.timer( baseMetricName + ".elapsed" );
-
-        // Validate conditions before the test (just to be safe)
-        assertThat( invocationsPerSecond.getCount() ).isEqualTo( 0L );
-        assertThat( failuresPerSecond.getCount() ).isEqualTo( 0L );
-        assertThat( invocations.getCount() ).isEqualTo( 0L );
-        assertThat( failures.getCount() ).isEqualTo( 0L );
-        assertThat( timer.getCount() ).isEqualTo( 0L );
-
         // Perform the test
         interceptor.intercept( invocation );
 
-        // Validate that almost all metrics were incremented
-        assertThat( invocationsPerSecond.getCount() ).isGreaterThan( 0L );
-        assertThat( invocations.getCount() ).isGreaterThan( 0L );
-        assertThat( timer.getCount() ).isGreaterThan( 0L );
-        assertThat( timer.getSnapshot().getMean() ).isGreaterThan( 0.0 );
+        // Verify that following metrics were created
+        assertThat( metricRegistry.getCounters() ).containsKeys( "statement id.totalInvocations",
+                                                                 "statement id.totalFailures" );
+        assertThat( metricRegistry.getMeters() ).containsKeys( "statement id.invocationsPerSecond",
+                                                               "statement id.failuresPerSecond" );
+        assertThat( metricRegistry.getTimers() ).containsKey( "statement id.elapsed" );
 
-        // Validate that metrics for failure mode were NOT incremented
-        assertThat( failuresPerSecond.getCount() ).isEqualTo( 0L );
-        assertThat( failures.getCount() ).isEqualTo( 0L );
+        // Validate that metrics were incremented
+        assertThat( metricRegistry.counter( "statement id.totalInvocations" ).getCount() ).isEqualTo( 1L );
+        assertThat( metricRegistry.counter( "statement id.totalFailures" ).getCount() ).isZero();
+        assertThat( metricRegistry.meter( "statement id.invocationsPerSecond" ).getCount() ).isEqualTo( 1L );
+        assertThat( metricRegistry.meter( "statement id.failuresPerSecond" ).getCount() ).isZero();
+        assertThat( metricRegistry.timer( "statement id.elapsed" ).getCount() ).isEqualTo( 1L );
     }
 
     @Test
     public void testIntercept_marksMetrics_exceptionFromMapper() throws Throwable {
-        // Prepare test by fetching appropriate metrics from the registry
-        String baseMetricName = "com.tguzik.mybatismetrics.InstrumentingInterceptorTest$FakeMapper#doSomething";
-        Meter invocationsPerSecond = metricRegistry.meter( baseMetricName + ".invocationsPerSecond" );
-        Meter failuresPerSecond = metricRegistry.meter( baseMetricName + ".failuresPerSecond" );
-        Counter invocations = metricRegistry.counter( baseMetricName + ".totalInvocations" );
-        Counter failures = metricRegistry.counter( baseMetricName + ".totalFailures" );
-        Timer timer = metricRegistry.timer( baseMetricName + ".elapsed" );
-
-        // Validate conditions before the test (just to be safe)
-        assertThat( invocationsPerSecond.getCount() ).isEqualTo( 0L );
-        assertThat( failuresPerSecond.getCount() ).isEqualTo( 0L );
-        assertThat( invocations.getCount() ).isEqualTo( 0L );
-        assertThat( failures.getCount() ).isEqualTo( 0L );
-        assertThat( timer.getCount() ).isEqualTo( 0L );
-
-        // Modify invocation to throw an exception
-        doThrow( new RuntimeException( "custom exception" ) ).when( fakeMapper )
-                                                             .doSomething( anyString(), anyInt(), anyInt() );
+        doThrow( new RuntimeException( "custom exception" ) ).when( fakeExecutor )
+                                                             .query( any( MappedStatement.class ),
+                                                                     any(),
+                                                                     any( RowBounds.class ),
+                                                                     any( ResultHandler.class ),
+                                                                     any( CacheKey.class ),
+                                                                     any( BoundSql.class ) );
 
         // Perform the test
         try {
@@ -93,24 +87,34 @@ public class InstrumentingInterceptorTest {
             fail( "Expected exception" );
         }
         catch ( Exception e ) {
-            // Discard the exception. It is verified in a separate test
+            // Discard the exception. These are verified in a separate test
         }
 
-        // Validate that almost all metrics were incremented
-        assertThat( invocationsPerSecond.getCount() ).isGreaterThan( 0L );
-        assertThat( invocations.getCount() ).isGreaterThan( 0L );
-        assertThat( timer.getCount() ).isGreaterThan( 0L );
-        assertThat( timer.getSnapshot().getMean() ).isGreaterThan( 0.0 );
+        // Verify that following metrics were created
+        assertThat( metricRegistry.getCounters() ).containsKeys( "statement id.totalInvocations",
+                                                                 "statement id.totalFailures" );
+        assertThat( metricRegistry.getMeters() ).containsKeys( "statement id.invocationsPerSecond",
+                                                               "statement id.failuresPerSecond" );
+        assertThat( metricRegistry.getTimers() ).containsKey( "statement id.elapsed" );
 
-        // Validate that metrics for failure mode were also incremented
-        assertThat( failuresPerSecond.getCount() ).isGreaterThan( 0L );
-        assertThat( failures.getCount() ).isGreaterThan( 0L );
+        // Validate that metrics were incremented
+        assertThat( metricRegistry.counter( "statement id.totalInvocations" ).getCount() ).isEqualTo( 1L );
+        assertThat( metricRegistry.counter( "statement id.totalFailures" ).getCount() ).isEqualTo( 1L );
+        assertThat( metricRegistry.meter( "statement id.invocationsPerSecond" ).getCount() ).isEqualTo( 1L );
+        assertThat( metricRegistry.meter( "statement id.failuresPerSecond" ).getCount() ).isEqualTo( 1L );
+        assertThat( metricRegistry.timer( "statement id.elapsed" ).getCount() ).isEqualTo( 1L );
     }
 
     @Test
     public void testIntercept_returnsValueFromTheMapperUnmodified() throws Throwable {
-        Object expectedValue = "whatever mapper returns";
-        doReturn( expectedValue ).when( fakeMapper ).doSomething( anyString(), anyInt(), anyInt() );
+        Object expectedValue = mock( List.class );
+        doReturn( expectedValue ).when( fakeExecutor )
+                                 .query( any( MappedStatement.class ),
+                                         any(),
+                                         any( RowBounds.class ),
+                                         any( ResultHandler.class ),
+                                         any( CacheKey.class ),
+                                         any( BoundSql.class ) );
 
         Object actualValue = interceptor.intercept( invocation );
 
@@ -119,8 +123,14 @@ public class InstrumentingInterceptorTest {
 
     @Test
     public void testIntercept_rethrowsExceptionUnmodified() throws Throwable {
-        Throwable expcetedException = new RuntimeException( "whatever mapper throws" );
-        doThrow( expcetedException ).when( fakeMapper ).doSomething( anyString(), anyInt(), anyInt() );
+        Throwable expcetedException = new RuntimeException( "whatever it throws" );
+        doThrow( expcetedException ).when( fakeExecutor )
+                                    .query( any( MappedStatement.class ),
+                                            any(),
+                                            any( RowBounds.class ),
+                                            any( ResultHandler.class ),
+                                            any( CacheKey.class ),
+                                            any( BoundSql.class ) );
 
         try {
             interceptor.intercept( invocation );
@@ -152,16 +162,54 @@ public class InstrumentingInterceptorTest {
     }
 
     @Test
-    public void testDeriveMetricName() throws Exception {
-        String expectedName = "com.tguzik.mybatismetrics.InstrumentingInterceptorTest$FakeMapper#doSomething";
-        String actualName = interceptor.deriveMetricName( invocation );
-
-        assertThat( actualName ).isEqualTo( expectedName );
+    public void testDeriveMetricName_returnsMappedStatementId() throws Exception {
+        assertThat( interceptor.deriveMetricName( invocation ) ).isEqualTo( "statement id" );
     }
 
-    public static class FakeMapper {
-        public Object doSomething( String arg1, int arg2, int arg3 ) {
-            return 0;
-        }
+    @Test
+    public void testDeriveMetricName_returnsMappedStatementId_evenIfTargetIsNotAnExecutor() throws Exception {
+        this.invocation = new Invocation( mock( Object.class ),
+                                          Object.class.getDeclaredMethod( "equals", Object.class ),
+                                          new Object[] { fakeStatement } );
+
+        assertThat( interceptor.deriveMetricName( invocation ) ).isEqualTo( "statement id" );
+    }
+
+    @Test
+    public void testDeriveMetricName_returnsInvalidInvocation_firstArgumentIsNotMappedStatement() throws Exception {
+        this.invocation = new Invocation( fakeExecutor,
+                                          Executor.class.getDeclaredMethod( "query",
+                                                                            MappedStatement.class,
+                                                                            Object.class,
+                                                                            RowBounds.class,
+                                                                            ResultHandler.class,
+                                                                            CacheKey.class,
+                                                                            BoundSql.class ),
+                                          new Object[] { "not a mapped statement", null, null, null, null, null } );
+
+        assertThat( interceptor.deriveMetricName( invocation ) ).isEqualTo( "mybatis-metrics.invocations.invalid" );
+    }
+
+    @Test
+    public void testFirstArgumentIsMappedStatement() {
+        assertThat( interceptor.firstArgumentIsMappedStatement( invocation ) ).isTrue();
+    }
+
+    @Test
+    public void testFirstArgumentIsMappedStatement_targetIsNotAnExecutor() throws NoSuchMethodException {
+        this.invocation = new Invocation( mock( Object.class ),
+                                          Object.class.getDeclaredMethod( "equals", Object.class ),
+                                          new Object[] { fakeStatement } );
+
+        assertThat( interceptor.firstArgumentIsMappedStatement( invocation ) ).isTrue();
+    }
+
+    @Test
+    public void testFirstArgumentIsMappedStatement_firstArgumentNotMappedStatement() throws NoSuchMethodException {
+        this.invocation = new Invocation( mock( Object.class ),
+                                          Object.class.getDeclaredMethod( "equals", Object.class ),
+                                          new Object[] { "not a mapped statement" } );
+
+        assertThat( interceptor.firstArgumentIsMappedStatement( invocation ) ).isFalse();
     }
 }
