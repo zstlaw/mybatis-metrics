@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.tguzik.mybatismetrics.integrationtests.filebasedbootstrap.FakeMapper">
+<mapper namespace="com.tguzik.mybatismetrics.integrationtests.xmlfiles.FakeMapper">
     <!-- Remember that this will use private in-memory database -->
     <!-- There should be one table created by this statement: -->
     <!--    create table test (key varchar(20), value varchar(20))    -->

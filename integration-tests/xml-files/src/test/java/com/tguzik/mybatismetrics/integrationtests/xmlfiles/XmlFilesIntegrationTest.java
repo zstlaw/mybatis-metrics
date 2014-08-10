@@ -1,5 +1,6 @@
-package com.tguzik.mybatismetrics.integrationtests.filebasedbootstrap;
+package com.tguzik.mybatismetrics.integrationtests.xmlfiles;
 
+import static com.tguzik.mybatismetrics.integrationtests.IntegrationTestVerificationUtil.validateSuccessfulOperation;
 import static org.assertj.core.api.Assertions.fail;
 
 import javax.inject.Provider;
@@ -14,23 +15,22 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.codahale.metrics.MetricRegistry;
 import com.tguzik.mybatismetrics.PropertyBootstrappedInstrumentingInterceptor;
-import com.tguzik.mybatismetrics.integrationtests.BaseFunctionalIntegrationTest;
+import com.tguzik.mybatismetrics.integrationtests.BaseIntegrationTestBlueprint;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.apache.log4j.BasicConfigurator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Yes, there are multiple @Before methods. Yes, it's for clarity. No, they are not executed in any specific order.
+ * Integration test where we bootstrap MyBatis using XML files and perform operations on mappers.
  *
  * @author Tomasz Guzik <tomek@tguzik.com>
  */
-public class FilebasedBootstrapIntegrationTest extends BaseFunctionalIntegrationTest {
+public class XmlFilesIntegrationTest extends BaseIntegrationTestBlueprint {
     private SqlSessionFactory sqlSessionFactory;
     private MetricRegistry metricRegistry;
 
@@ -53,8 +53,9 @@ public class FilebasedBootstrapIntegrationTest extends BaseFunctionalIntegration
         return registry;
     }
 
+    /** Create in-memory database table so that mapper methods might operate on something */
     private Connection bootstrapInMemoryDatabase() throws SQLException {
-        Connection connection = DriverManager.getConnection( "jdbc:hsqldb:mem:file-based-integration-test", "sa", "" );
+        Connection connection = DriverManager.getConnection( "jdbc:hsqldb:mem:xmlfiles-integration-test", "sa", "" );
         connection.prepareStatement( "create table test (key varchar(20), value varchar(20))" ).execute();
         return connection;
     }
@@ -79,6 +80,7 @@ public class FilebasedBootstrapIntegrationTest extends BaseFunctionalIntegration
     }
 
     @Test
+    @Override
     public void testMyBatisConfiguration_containsInstanceOfPropertyBootstrappedInstrumentingInterceptor() {
         boolean containsExpectedInstance = false;
 
@@ -95,6 +97,7 @@ public class FilebasedBootstrapIntegrationTest extends BaseFunctionalIntegration
     }
 
     @Test
+    @Override
     public void testMapperOperation_select_updatesMetricRegistry() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
@@ -103,11 +106,12 @@ public class FilebasedBootstrapIntegrationTest extends BaseFunctionalIntegration
         }
 
         // Validate
-        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.filebasedbootstrap.FakeMapper.doSelect";
+        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.xmlfiles.FakeMapper.doSelect";
         validateSuccessfulOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
+    @Override
     public void testMapperOperation_update_updatesMetricRegistry() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
@@ -116,11 +120,12 @@ public class FilebasedBootstrapIntegrationTest extends BaseFunctionalIntegration
         }
 
         // Validate
-        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.filebasedbootstrap.FakeMapper.doUpdate";
+        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.xmlfiles.FakeMapper.doUpdate";
         validateSuccessfulOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
+    @Override
     public void testMapperOperation_insert_updatesMetricRegistry() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
@@ -129,11 +134,12 @@ public class FilebasedBootstrapIntegrationTest extends BaseFunctionalIntegration
         }
 
         // Validate
-        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.filebasedbootstrap.FakeMapper.doInsert";
+        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.xmlfiles.FakeMapper.doInsert";
         validateSuccessfulOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
+    @Override
     public void testMapperOperation_delete_updatesMetricRegistry() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
@@ -142,7 +148,7 @@ public class FilebasedBootstrapIntegrationTest extends BaseFunctionalIntegration
         }
 
         // Validate
-        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.filebasedbootstrap.FakeMapper.doDelete";
+        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.xmlfiles.FakeMapper.doDelete";
         validateSuccessfulOperation( this.metricRegistry, baseMetricName );
     }
 

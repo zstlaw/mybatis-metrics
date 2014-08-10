@@ -1,4 +1,4 @@
-package com.tguzik.mybatismetrics.integrationtests.filebasedbootstrap;
+package com.tguzik.mybatismetrics.integrationtests.xmlfiles;
 
 /**
  * @author Tomasz Guzik <tomek@tguzik.com>

@@ -1,7 +1,6 @@
 package com.tguzik.mybatismetrics.integrationtests;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 import java.util.Map;
 
@@ -9,12 +8,6 @@ import com.codahale.metrics.Counter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.tguzik.mybatismetrics.PropertyBootstrappedInstrumentingInterceptor;
-import com.tguzik.mybatismetrics.integrationtests.filebasedbootstrap.FakeMapper;
-import org.apache.ibatis.plugin.Interceptor;
-import org.apache.ibatis.session.SqlSession;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * The reason why we're bothering with inheritance in these integration tests is that we want to have exactly same
@@ -22,12 +15,10 @@ import org.junit.Test;
  *
  * @author Tomasz Guzik <tomek@tguzik.com>
  */
-public abstract class BaseFunctionalIntegrationTest {
+public class IntegrationTestVerificationUtil {
     private MetricRegistry metricRegistry;
 
-
-
-    protected void validateSuccessfulOperation( MetricRegistry registry, String baseMetricName ) {
+    public static void validateSuccessfulOperation( MetricRegistry registry, String baseMetricName ) {
         // Preconditions
         assertThat( registry ).isNotNull();
         assertThat( baseMetricName ).isNotEmpty();
@@ -51,7 +42,7 @@ public abstract class BaseFunctionalIntegrationTest {
         assertThat( timers.get( baseMetricName + ".elapsed" ).getCount() ).isEqualTo( 1 );
     }
 
-    protected void validateFailedOperation( MetricRegistry registry, String baseMetricName ) {
+    public static void validateFailedOperation( MetricRegistry registry, String baseMetricName ) {
         // Preconditions
         assertThat( registry ).isNotNull();
         assertThat( baseMetricName ).isNotEmpty();

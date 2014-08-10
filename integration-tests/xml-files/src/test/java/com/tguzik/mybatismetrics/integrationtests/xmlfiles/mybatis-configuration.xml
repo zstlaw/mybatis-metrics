@@ -4,14 +4,14 @@
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
     <settings>
-        <setting name="logImpl" value="LOG4J"/>
+        <setting name="logImpl" value="LOG4J" />
     </settings>
 
     <plugins>
         <!-- Magic happens here -->
         <plugin interceptor="com.tguzik.mybatismetrics.PropertyBootstrappedInstrumentingInterceptor">
             <property name="metrics.registry.provider"
-                      value="com.tguzik.mybatismetrics.integrationtests.filebasedbootstrap.FilebasedBootstrapIntegrationTest$MetricRegistryProvider" />
+                      value="com.tguzik.mybatismetrics.integrationtests.xmlfiles.XmlFilesIntegrationTest$MetricRegistryProvider" />
         </plugin>
     </plugins>
 
@@ -21,7 +21,7 @@
             <dataSource type="POOLED">
                 <!-- Connect to private hsqldb in-memory database. -->
                 <property name="driver" value="org.hsqldb.jdbcDriver" />
-                <property name="url" value="jdbc:hsqldb:mem:file-based-integration-test" />
+                <property name="url" value="jdbc:hsqldb:mem:xmlfiles-integration-test" />
                 <property name="username" value="sa" />
                 <property name="password" value="" />
             </dataSource>
@@ -29,6 +29,6 @@
     </environments>
 
     <mappers>
-        <mapper resource="com/tguzik/mybatismetrics/integrationtests/filebasedbootstrap/FakeMapper.xml" />
+        <mapper resource="com/tguzik/mybatismetrics/integrationtests/xmlfiles/FakeMapper.xml" />
     </mappers>
 </configuration>
