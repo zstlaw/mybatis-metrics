@@ -54,20 +54,23 @@ import org.slf4j.LoggerFactory;
  *
  * @author Tomasz Guzik <tomek@tguzik.com>
  */
-/* as far as I know there's no way to set it up to 'intercept everything' in one line :( */
-@Intercepts({ //
-              @Signature(
-                      type = Executor.class,
-                      method = "update",
-                      args = { MappedStatement.class, Object.class }), //
-              @Signature(type = Executor.class,
-                         method = "query",
-                         args = { MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class,
-                                  CacheKey.class, BoundSql.class }), //
-              @Signature(type = Executor.class,
-                         method = "query",
-                         args = { MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class }) //
-            })
+
+@RefactorThis( "Rename this class to something less hideous" )
+
+@Intercepts( { //
+        /* as far as I know there's no way to set it up to 'intercept everything' in one line :( */
+        @Signature(
+                type = Executor.class,
+                method = "update",
+                args = { MappedStatement.class, Object.class } ), //
+        @Signature( type = Executor.class,
+                    method = "query",
+                    args = { MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class, CacheKey.class,
+                             BoundSql.class } ), //
+        @Signature( type = Executor.class,
+                    method = "query",
+                    args = { MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class } ) //
+             } )
 public class PropertyBootstrappedInstrumentingInterceptor implements Interceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger( PropertyBootstrappedInstrumentingInterceptor.class );
     private static final String PROPERTY_NAME = "metrics.registry.provider";
@@ -80,7 +83,7 @@ public class PropertyBootstrappedInstrumentingInterceptor implements Interceptor
     }
 
     @Override
-    @ExpectedPerformanceProfile(path = ExpectedPerformanceProfile.Path.HOT)
+    @ExpectedPerformanceProfile( path = ExpectedPerformanceProfile.Path.HOT )
     public Object intercept( Invocation invocation ) throws Throwable {
         // Get the reference
         Interceptor interceptor = interceptorReference.get();
@@ -104,8 +107,8 @@ public class PropertyBootstrappedInstrumentingInterceptor implements Interceptor
     }
 
     @Override
-    @RefactorThis("This method has a subtle race condition. While it's a low priority item, " +
-                  "it should be removed eventually.")
+    @RefactorThis( "This method has a subtle race condition. While it's a low priority item, " +
+                   "it should be removed eventually." )
     public void setProperties( @Nullable Properties properties ) {
         LOGGER.trace( "setProperties(): {}", properties );
 
@@ -128,12 +131,12 @@ public class PropertyBootstrappedInstrumentingInterceptor implements Interceptor
 
     private void tryToInstanitateProvider( @Nonnull String propertySource, @Nullable String providerName ) {
         if ( providerName == null || providerName.trim().isEmpty() ) {
-            LOGGER.info( "{} '{}' was null or empty.", propertySource, PROPERTY_NAME );
+            LOGGER.debug( "{} '{}' was null or empty.", propertySource, PROPERTY_NAME );
             return;
         }
 
-        LOGGER.info( "Attempting to instanitate javax.inject.Provider<MetricRegistry> from class '{}'...",
-                     providerName );
+        LOGGER.debug( "Attempting to instanitate javax.inject.Provider<MetricRegistry> from class '{}'...",
+                      providerName );
 
         try {
             Class<Provider<MetricRegistry>> clazz = (Class<Provider<MetricRegistry>>) Class.forName( providerName );

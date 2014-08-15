@@ -7,19 +7,15 @@
     <!-- There should be one table created by this statement: -->
     <!--    create table test (key varchar(20), value varchar(20))    -->
 
-    <select id="doSelect" resultType="int">
-        select count(*) from test
-    </select>
+    <select id="doSelect" resultType="int">select count(*) from test</select>
+    <select id="doFailingSelect" resultType="int">not sql</select>
 
-    <insert id="doInsert">
-        insert into test (key, value) values ('key', 'value')
-    </insert>
+    <insert id="doInsert">insert into test (key, value) values ('key', 'value')</insert>
+    <insert id="doFailingInsert">not sql</insert>
 
-    <update id="doUpdate">
-        update test set value = 'new value'
-    </update>
+    <update id="doUpdate">update test set value = 'new value'</update>
+    <update id="doFailingUpdate">not sql</update>
 
-    <delete id="doDelete">
-        delete from test
-    </delete>
+    <delete id="doDelete">delete from test</delete>
+    <delete id="doFailingDelete">not sql</delete>
 </mapper>

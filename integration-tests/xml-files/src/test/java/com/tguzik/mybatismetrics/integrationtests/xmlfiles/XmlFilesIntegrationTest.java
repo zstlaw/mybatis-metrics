@@ -1,5 +1,6 @@
 package com.tguzik.mybatismetrics.integrationtests.xmlfiles;
 
+import static com.tguzik.mybatismetrics.integrationtests.IntegrationTestVerificationUtil.validateFailingOperation;
 import static com.tguzik.mybatismetrics.integrationtests.IntegrationTestVerificationUtil.validateSuccessfulOperation;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -67,7 +68,6 @@ public class XmlFilesIntegrationTest implements IntegrationTestBlueprint {
     }
 
     private SqlSessionFactory bootstrapMyBatis() throws IOException {
-        System.out.println( "cwd: " + Paths.get( "." ).toAbsolutePath().toString() );
         Path configurationPath = createMainConfigurationPath( "mybatis-configuration.xml" );
 
         try ( InputStream configurationStream = Resources.getResourceAsStream( configurationPath.toString() ) ) {
@@ -78,18 +78,14 @@ public class XmlFilesIntegrationTest implements IntegrationTestBlueprint {
     @Test
     @Override
     public void testMyBatisConfiguration_containsInstanceOfInterceptor() {
-        boolean containsExpectedInstance = false;
-
         for ( Interceptor interceptor : this.sqlSessionFactory.getConfiguration().getInterceptors() ) {
             if ( interceptor instanceof PropertyBootstrappedInstrumentingInterceptor ) {
-                containsExpectedInstance = true;
+                return;
             }
         }
 
-        if ( !containsExpectedInstance ) {
-            fail( "Expected the list of all interceptors to contain an instance of " +
-                  PropertyBootstrappedInstrumentingInterceptor.class.getSimpleName() );
-        }
+        fail( "Expected the list of all interceptors to contain an instance of " +
+              PropertyBootstrappedInstrumentingInterceptor.class.getSimpleName() );
     }
 
     @Test
@@ -97,19 +93,29 @@ public class XmlFilesIntegrationTest implements IntegrationTestBlueprint {
     public void testMapperOperation_select_success() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
-            FakeMapper mapper = session.getMapper( FakeMapper.class );
-            mapper.doSelect( "any", 123, "arguments" );
+            session.getMapper( FakeMapper.class ).doSelect( "any", 123, "arguments" );
         }
 
         // Validate
-        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.xmlfiles.FakeMapper.doSelect";
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doSelect";
         validateSuccessfulOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
     @Override
     public void testMapperOperation_select_failure() {
+        // Perform action
+        try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
+            session.getMapper( FakeMapper.class ).doFailingSelect( "any", 123, "arguments" );
+            fail( "Expected exception" );
+        }
+        catch ( Exception e ) {
+            // we don't care about this particular exception. discard it.
+        }
 
+        // Validate
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doFailingSelect";
+        validateFailingOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
@@ -117,19 +123,29 @@ public class XmlFilesIntegrationTest implements IntegrationTestBlueprint {
     public void testMapperOperation_update_success() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
-            FakeMapper mapper = session.getMapper( FakeMapper.class );
-            mapper.doUpdate( "any", 123, "arguments" );
+            session.getMapper( FakeMapper.class ).doUpdate( "any", 123, "arguments" );
         }
 
         // Validate
-        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.xmlfiles.FakeMapper.doUpdate";
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doUpdate";
         validateSuccessfulOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
     @Override
     public void testMapperOperation_update_failure() {
+        // Perform action
+        try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
+            session.getMapper( FakeMapper.class ).doFailingUpdate( "any", 123, "arguments" );
+            fail( "Expected exception" );
+        }
+        catch ( Exception e ) {
+            // we don't care about this particular exception. discard it.
+        }
 
+        // Validate
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doFailingUpdate";
+        validateFailingOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
@@ -137,19 +153,29 @@ public class XmlFilesIntegrationTest implements IntegrationTestBlueprint {
     public void testMapperOperation_insert_success() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
-            FakeMapper mapper = session.getMapper( FakeMapper.class );
-            mapper.doInsert( "any", 123, "arguments" );
+            session.getMapper( FakeMapper.class ).doInsert( "any", 123, "arguments" );
         }
 
         // Validate
-        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.xmlfiles.FakeMapper.doInsert";
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doInsert";
         validateSuccessfulOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
     @Override
     public void testMapperOperation_insert_failure() {
+        // Perform action
+        try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
+            session.getMapper( FakeMapper.class ).doFailingInsert( "any", 123, "arguments" );
+            fail( "Expected exception" );
+        }
+        catch ( Exception e ) {
+            // we don't care about this particular exception. discard it.
+        }
 
+        // Validate
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doFailingInsert";
+        validateFailingOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
@@ -157,19 +183,29 @@ public class XmlFilesIntegrationTest implements IntegrationTestBlueprint {
     public void testMapperOperation_delete_success() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
-            FakeMapper mapper = session.getMapper( FakeMapper.class );
-            mapper.doDelete( "any", 123, "arguments" );
+            session.getMapper( FakeMapper.class ).doDelete( "any", 123, "arguments" );
         }
 
         // Validate
-        String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.xmlfiles.FakeMapper.doDelete";
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doDelete";
         validateSuccessfulOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
     @Override
     public void testMapperOperation_delete_failure() {
+        // Perform action
+        try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
+            session.getMapper( FakeMapper.class ).doFailingDelete( "any", 123, "arguments" );
+            fail( "Expected exception" );
+        }
+        catch ( Exception e ) {
+            // we don't care about this particular exception. discard it.
+        }
 
+        // Validate
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doFailingDelete";
+        validateFailingOperation( this.metricRegistry, baseMetricName );
     }
 
     private Path createMainConfigurationPath( String mainConfigurationFileName ) {

@@ -1,5 +1,6 @@
 package com.tguzik.mybatismetrics.integrationtests.fileless;
 
+import static com.tguzik.mybatismetrics.integrationtests.IntegrationTestVerificationUtil.validateFailingOperation;
 import static com.tguzik.mybatismetrics.integrationtests.IntegrationTestVerificationUtil.validateSuccessfulOperation;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -100,7 +101,18 @@ public class FilelessIntegrationTest implements IntegrationTestBlueprint {
     @Test
     @Override
     public void testMapperOperation_select_failure() {
+        // Perform action
+        try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
+            session.getMapper( FakeMapper.class ).doFailingSelect( "any", 123, "arguments" );
+            fail( "Expected exception" );
+        }
+        catch ( Exception e ) {
+            // we don't care about this particular exception. discard it.
+        }
 
+        // Validate
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doFailingSelect";
+        validateFailingOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
@@ -119,7 +131,18 @@ public class FilelessIntegrationTest implements IntegrationTestBlueprint {
     @Test
     @Override
     public void testMapperOperation_update_failure() {
+        // Perform action
+        try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
+            session.getMapper( FakeMapper.class ).doFailingUpdate( "any", 123, "arguments" );
+            fail( "Expected exception" );
+        }
+        catch ( Exception e ) {
+            // we don't care about this particular exception. discard it.
+        }
 
+        // Validate
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doFailingUpdate";
+        validateFailingOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
@@ -138,7 +161,18 @@ public class FilelessIntegrationTest implements IntegrationTestBlueprint {
     @Test
     @Override
     public void testMapperOperation_insert_failure() {
+        // Perform action
+        try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
+            session.getMapper( FakeMapper.class ).doFailingInsert( "any", 123, "arguments" );
+            fail( "Expected exception" );
+        }
+        catch ( Exception e ) {
+            // we don't care about this particular exception. discard it.
+        }
 
+        // Validate
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doFailingInsert";
+        validateFailingOperation( this.metricRegistry, baseMetricName );
     }
 
     @Test
@@ -157,6 +191,17 @@ public class FilelessIntegrationTest implements IntegrationTestBlueprint {
     @Test
     @Override
     public void testMapperOperation_delete_failure() {
+        // Perform action
+        try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
+            session.getMapper( FakeMapper.class ).doFailingDelete( "any", 123, "arguments" );
+            fail( "Expected exception" );
+        }
+        catch ( Exception e ) {
+            // we don't care about this particular exception. discard it.
+        }
 
+        // Validate
+        String baseMetricName = FakeMapper.class.getCanonicalName() + ".doFailingDelete";
+        validateFailingOperation( this.metricRegistry, baseMetricName );
     }
 }
