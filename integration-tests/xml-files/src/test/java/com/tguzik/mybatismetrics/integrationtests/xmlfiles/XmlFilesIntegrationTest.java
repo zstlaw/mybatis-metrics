@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.codahale.metrics.MetricRegistry;
 import com.tguzik.mybatismetrics.PropertyBootstrappedInstrumentingInterceptor;
-import com.tguzik.mybatismetrics.integrationtests.BaseIntegrationTestBlueprint;
+import com.tguzik.mybatismetrics.integrationtests.IntegrationTestBlueprint;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.session.SqlSession;
@@ -30,7 +30,7 @@ import org.junit.Test;
  *
  * @author Tomasz Guzik <tomek@tguzik.com>
  */
-public class XmlFilesIntegrationTest extends BaseIntegrationTestBlueprint {
+public class XmlFilesIntegrationTest implements IntegrationTestBlueprint {
     private SqlSessionFactory sqlSessionFactory;
     private MetricRegistry metricRegistry;
 
@@ -62,10 +62,6 @@ public class XmlFilesIntegrationTest extends BaseIntegrationTestBlueprint {
 
     @After
     public void tearDownInMemoryDatabase() throws SQLException {
-        if ( databaseConnection == null ) {
-            return;
-        }
-
         this.databaseConnection.prepareStatement( "drop table test;" ).execute();
         this.databaseConnection.close();
     }
@@ -81,7 +77,7 @@ public class XmlFilesIntegrationTest extends BaseIntegrationTestBlueprint {
 
     @Test
     @Override
-    public void testMyBatisConfiguration_containsInstanceOfPropertyBootstrappedInstrumentingInterceptor() {
+    public void testMyBatisConfiguration_containsInstanceOfInterceptor() {
         boolean containsExpectedInstance = false;
 
         for ( Interceptor interceptor : this.sqlSessionFactory.getConfiguration().getInterceptors() ) {
@@ -98,7 +94,7 @@ public class XmlFilesIntegrationTest extends BaseIntegrationTestBlueprint {
 
     @Test
     @Override
-    public void testMapperOperation_select_updatesMetricRegistry() {
+    public void testMapperOperation_select_success() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
             FakeMapper mapper = session.getMapper( FakeMapper.class );
@@ -112,7 +108,13 @@ public class XmlFilesIntegrationTest extends BaseIntegrationTestBlueprint {
 
     @Test
     @Override
-    public void testMapperOperation_update_updatesMetricRegistry() {
+    public void testMapperOperation_select_failure() {
+
+    }
+
+    @Test
+    @Override
+    public void testMapperOperation_update_success() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
             FakeMapper mapper = session.getMapper( FakeMapper.class );
@@ -126,7 +128,13 @@ public class XmlFilesIntegrationTest extends BaseIntegrationTestBlueprint {
 
     @Test
     @Override
-    public void testMapperOperation_insert_updatesMetricRegistry() {
+    public void testMapperOperation_update_failure() {
+
+    }
+
+    @Test
+    @Override
+    public void testMapperOperation_insert_success() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
             FakeMapper mapper = session.getMapper( FakeMapper.class );
@@ -140,7 +148,13 @@ public class XmlFilesIntegrationTest extends BaseIntegrationTestBlueprint {
 
     @Test
     @Override
-    public void testMapperOperation_delete_updatesMetricRegistry() {
+    public void testMapperOperation_insert_failure() {
+
+    }
+
+    @Test
+    @Override
+    public void testMapperOperation_delete_success() {
         // Perform action
         try ( SqlSession session = this.sqlSessionFactory.openSession() ) {
             FakeMapper mapper = session.getMapper( FakeMapper.class );
@@ -150,6 +164,12 @@ public class XmlFilesIntegrationTest extends BaseIntegrationTestBlueprint {
         // Validate
         String baseMetricName = "com.tguzik.mybatismetrics.integrationtests.xmlfiles.FakeMapper.doDelete";
         validateSuccessfulOperation( this.metricRegistry, baseMetricName );
+    }
+
+    @Test
+    @Override
+    public void testMapperOperation_delete_failure() {
+
     }
 
     private Path createMainConfigurationPath( String mainConfigurationFileName ) {

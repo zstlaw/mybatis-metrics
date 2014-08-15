@@ -74,6 +74,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
+                    <forkCount>1</forkCount>
                     <systemProperties>
                         <property>
                             <name>log4j.configuration</name>

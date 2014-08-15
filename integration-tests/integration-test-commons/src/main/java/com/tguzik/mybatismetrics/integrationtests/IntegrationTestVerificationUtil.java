@@ -16,8 +16,6 @@ import com.codahale.metrics.Timer;
  * @author Tomasz Guzik <tomek@tguzik.com>
  */
 public class IntegrationTestVerificationUtil {
-    private MetricRegistry metricRegistry;
-
     public static void validateSuccessfulOperation( MetricRegistry registry, String baseMetricName ) {
         // Preconditions
         assertThat( registry ).isNotNull();
