@@ -4,6 +4,7 @@ import static com.tguzik.metrics.mybatis.integrationtests.IntegrationTestVerific
 import static com.tguzik.metrics.mybatis.integrationtests.IntegrationTestVerificationUtil.validateSuccessfulOperation;
 import static org.junit.Assert.fail;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -27,17 +28,26 @@ import org.junit.Test;
  */
 public class GuiceIntegrationTest implements IntegrationTestBlueprint {
     private MetricRegistry metricRegistry;
-    private JDBCDataSource dataSource;
+    private DataSource dataSource;
     private Injector injector;
+    private FakeMapper fakeMapper;
 
     @Before
     public void setUp() throws SQLException, IOException {
         this.metricRegistry = new MetricRegistry();
         this.dataSource = bootstrapInMemoryDatabase();
         this.injector = bootstrapGuice( metricRegistry, dataSource );
+        this.fakeMapper = injector.getInstance( FakeMapper.class );
     }
 
-    private Injector bootstrapGuice( MetricRegistry metricRegistry, JDBCDataSource dataSource ) {
+    @After
+    public void tearDown() throws SQLException {
+        try ( Connection connection = dataSource.getConnection() ) {
+            connection.prepareStatement( "drop table test" ).executeUpdate();
+        }
+    }
+
+    private Injector bootstrapGuice( MetricRegistry metricRegistry, DataSource dataSource ) {
         return Guice.createInjector( new IntegrationTestLocalModule( metricRegistry ),
                                      new MyBatisIntegrationModule( dataSource ) );
     }
@@ -45,7 +55,7 @@ public class GuiceIntegrationTest implements IntegrationTestBlueprint {
     /** Create in-memory database table so that mapper methods might operate on something */
     private JDBCDataSource bootstrapInMemoryDatabase() throws SQLException {
         JDBCDataSource dataSource = new JDBCDataSource();
-        dataSource.setUrl( "jdbc:hsqldb:mem:fileless-integration-test" );
+        dataSource.setUrl( "jdbc:hsqldb:mem:guice-integration-test" );
         dataSource.setUser( "sa" );
         dataSource.setPassword( "" );
 
@@ -54,13 +64,6 @@ public class GuiceIntegrationTest implements IntegrationTestBlueprint {
         }
 
         return dataSource;
-    }
-
-    @After
-    public void tearDown() throws SQLException {
-        try ( Connection connection = dataSource.getConnection() ) {
-            connection.prepareStatement( "drop table test" ).executeUpdate();
-        }
     }
 
     @Test
@@ -82,7 +85,7 @@ public class GuiceIntegrationTest implements IntegrationTestBlueprint {
     @Override
     public void testMapperOperation_select_success() {
         // Perform action
-        injector.getInstance( FakeMapper.class ).doSelect( "any", 123, "arguments" );
+        fakeMapper.doSelect( "any", 123, "arguments" );
 
         // Validate
         String baseMetricName = FakeMapper.class.getCanonicalName() + ".doSelect";
@@ -94,7 +97,7 @@ public class GuiceIntegrationTest implements IntegrationTestBlueprint {
     public void testMapperOperation_select_failure() {
         // Perform action
         try {
-            injector.getInstance( FakeMapper.class ).doFailingSelect( "any", 123, "arguments" );
+            fakeMapper.doFailingSelect( "any", 123, "arguments" );
             fail( "Expected exception" );
         }
         catch ( Exception e ) {
@@ -110,7 +113,7 @@ public class GuiceIntegrationTest implements IntegrationTestBlueprint {
     @Override
     public void testMapperOperation_update_success() {
         // Perform action
-        injector.getInstance( FakeMapper.class ).doUpdate( "any", 123, "arguments" );
+        fakeMapper.doUpdate( "any", 123, "arguments" );
 
         // Validate
         String baseMetricName = FakeMapper.class.getCanonicalName() + ".doUpdate";
@@ -122,7 +125,7 @@ public class GuiceIntegrationTest implements IntegrationTestBlueprint {
     public void testMapperOperation_update_failure() {
         // Perform action
         try {
-            injector.getInstance( FakeMapper.class ).doFailingUpdate( "any", 123, "arguments" );
+            fakeMapper.doFailingUpdate( "any", 123, "arguments" );
             fail( "Expected exception" );
         }
         catch ( Exception e ) {
@@ -138,7 +141,7 @@ public class GuiceIntegrationTest implements IntegrationTestBlueprint {
     @Override
     public void testMapperOperation_insert_success() {
         // Perform action
-        injector.getInstance( FakeMapper.class ).doInsert( "any", 123, "arguments" );
+        fakeMapper.doInsert( "any", 123, "arguments" );
 
         // Validate
         String baseMetricName = FakeMapper.class.getCanonicalName() + ".doInsert";
@@ -150,7 +153,7 @@ public class GuiceIntegrationTest implements IntegrationTestBlueprint {
     public void testMapperOperation_insert_failure() {
         // Perform action
         try {
-            injector.getInstance( FakeMapper.class ).doFailingInsert( "any", 123, "arguments" );
+            fakeMapper.doFailingInsert( "any", 123, "arguments" );
             fail( "Expected exception" );
         }
         catch ( Exception e ) {
@@ -166,7 +169,7 @@ public class GuiceIntegrationTest implements IntegrationTestBlueprint {
     @Override
     public void testMapperOperation_delete_success() {
         // Perform action
-        injector.getInstance( FakeMapper.class ).doDelete( "any", 123, "arguments" );
+        fakeMapper.doDelete( "any", 123, "arguments" );
 
         // Validate
         String baseMetricName = FakeMapper.class.getCanonicalName() + ".doDelete";
@@ -178,7 +181,7 @@ public class GuiceIntegrationTest implements IntegrationTestBlueprint {
     public void testMapperOperation_delete_failure() {
         // Perform action
         try {
-            injector.getInstance( FakeMapper.class ).doFailingDelete( "any", 123, "arguments" );
+            fakeMapper.doFailingDelete( "any", 123, "arguments" );
             fail( "Expected exception" );
         }
         catch ( Exception e ) {

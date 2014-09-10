@@ -14,7 +14,7 @@ import org.mybatis.guice.MyBatisModule;
 public class MyBatisIntegrationModule extends MyBatisModule {
     private final DataSource dataSource;
 
-    public MyBatisIntegrationModule( JDBCDataSource dataSource ) {
+    public MyBatisIntegrationModule( DataSource dataSource ) {
         this.dataSource = dataSource;
     }
 
