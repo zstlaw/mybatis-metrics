@@ -1,0 +1,41 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+                           http://www.springframework.org/schema/jdbc  http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd">
+
+    <!-- Enable autowiring, basically -->
+    <context:annotation-config />
+
+    <!-- Basics -->
+    <bean id="metricRegistry" class="com.codahale.metrics.MetricRegistry" />
+
+    <jdbc:embedded-database id="dataSource">
+        <jdbc:script execution="INIT"    location="embedded-db-init.sql"    separator=";" />
+        <jdbc:script execution="DESTROY" location="embedded-db-destroy.sql" separator=";" />
+    </jdbc:embedded-database>
+
+
+    <!-- Create interceptor -->
+    <bean id="instrumentingInterceptor" class="com.tguzik.metrics.mybatis.InstrumentingInterceptor">
+        <constructor-arg index="0" ref="metricRegistry" />
+    </bean>
+
+
+    <!-- Create sqlSessionFactory with our interceptor -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+
+        <!-- This is *the* line that makes the difference: -->
+        <property name="plugins" ref="instrumentingInterceptor" />
+    </bean>
+
+
+    <!-- Create mapper with our instrumented session factory -->
+    <bean id="fakeMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <property name="mapperInterface" value="com.tguzik.metrics.mybatis.integrationtests.spring.FakeMapper" />
+        <property name="sqlSessionFactory" ref="sqlSessionFactory" />
+    </bean>
+</beans>

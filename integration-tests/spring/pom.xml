@@ -28,7 +28,6 @@
         </dependency>
 
 
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -45,6 +44,31 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -52,13 +76,13 @@
             <testResource>
                 <directory>${project.build.testSourceDirectory}</directory>
                 <includes>
-                    <include>**/*.xml</include>
+                    <include>**/*</include>
                 </includes>
             </testResource>
             <testResource>
                 <directory>src/test/resources</directory>
                 <includes>
-                    <include>test-log4j.xml</include>
+                    <include>**/*</include>
                 </includes>
             </testResource>
         </testResources>

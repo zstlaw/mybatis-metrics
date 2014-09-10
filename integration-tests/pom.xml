@@ -24,6 +24,14 @@
         <module>xml-files</module>
     </modules>
 
+    <properties>
+        <guice.version>4.0-beta4</guice.version>
+        <mybatis.guice.version>3.6</mybatis.guice.version>
+
+        <spring.version>4.1.0.RELEASE</spring.version>
+        <mybatis.spring.version>1.2.2</mybatis.spring.version>
+    </properties>
+
     <dependencyManagement>
         <dependencies>
             <!-- For all integration tests -->
@@ -44,19 +52,58 @@
             <dependency>
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
-                <version>3.0</version>
+                <version>${guice.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.google.inject.extensions</groupId>
                 <artifactId>guice-multibindings</artifactId>
-                <version>3.0</version>
+                <version>${guice.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.mybatis</groupId>
                 <artifactId>mybatis-guice</artifactId>
-                <version>3.6</version>
+                <version>${mybatis.guice.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+
+            <!-- spring integration test -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-core</artifactId>
+                <version>${spring.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-beans</artifactId>
+                <version>${spring.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-context</artifactId>
+                <version>${spring.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-jdbc</artifactId>
+                <version>${spring.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-test</artifactId>
+                <version>${spring.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis-spring</artifactId>
+                <version>${mybatis.spring.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
