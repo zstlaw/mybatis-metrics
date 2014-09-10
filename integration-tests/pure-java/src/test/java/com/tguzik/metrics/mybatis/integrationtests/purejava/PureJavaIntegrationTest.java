@@ -1,4 +1,4 @@
-package com.tguzik.metrics.mybatis.integrationtests.fileless;
+package com.tguzik.metrics.mybatis.integrationtests.purejava;
 
 import static com.tguzik.metrics.mybatis.integrationtests.IntegrationTestVerificationUtil.validateFailingOperation;
 import static com.tguzik.metrics.mybatis.integrationtests.IntegrationTestVerificationUtil.validateSuccessfulOperation;
@@ -29,7 +29,7 @@ import org.junit.Test;
  *
  * @author Tomasz Guzik <tomek@tguzik.com>
  */
-public class FilelessIntegrationTest implements IntegrationTestBlueprint {
+public class PureJavaIntegrationTest implements IntegrationTestBlueprint {
     private SqlSessionFactory sqlSessionFactory;
     private MetricRegistry metricRegistry;
     private JDBCDataSource dataSource;
@@ -44,7 +44,7 @@ public class FilelessIntegrationTest implements IntegrationTestBlueprint {
     /** Create in-memory database table so that mapper methods might operate on something */
     private JDBCDataSource bootstrapInMemoryDatabase() throws SQLException {
         JDBCDataSource dataSource = new JDBCDataSource();
-        dataSource.setUrl( "jdbc:hsqldb:mem:fileless-integration-test" );
+        dataSource.setUrl( "jdbc:hsqldb:mem:purejava-integration-test" );
         dataSource.setUser( "sa" );
         dataSource.setPassword( "" );
 

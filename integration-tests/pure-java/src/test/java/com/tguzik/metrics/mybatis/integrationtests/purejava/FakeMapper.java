@@ -1,4 +1,4 @@
-package com.tguzik.metrics.mybatis.integrationtests.fileless;
+package com.tguzik.metrics.mybatis.integrationtests.purejava;
 
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
