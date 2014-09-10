@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+        <setting name="logImpl" value="LOG4J" />
+    </settings>
+
+    <plugins>
+        <!-- Magic happens here -->
+        <plugin interceptor="com.tguzik.metrics.mybatis.PropertyInterceptorWrapper">
+            <property name="metrics.registry.provider"
+                      value="com.tguzik.metrics.mybatis.integrationtests.xmlfiles.XmlFilesIntegrationTest$MetricRegistryProvider" />
+        </plugin>
+    </plugins>
+
+    <environments default="file-based-integration-test">
+        <environment id="file-based-integration-test">
+            <transactionManager type="JDBC" />
+            <dataSource type="POOLED">
+                <!-- Connect to private hsqldb in-memory database. -->
+                <property name="driver" value="org.hsqldb.jdbcDriver" />
+                <property name="url" value="jdbc:hsqldb:mem:xmlfiles-integration-test" />
+                <property name="username" value="sa" />
+                <property name="password" value="" />
+            </dataSource>
+        </environment>
+    </environments>
+
+    <mappers>
+        <mapper resource="com/tguzik/metrics/mybatis/integrationtests/xmlfiles/FakeMapper.xml" />
+    </mappers>
+</configuration>
