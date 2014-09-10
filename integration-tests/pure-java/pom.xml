@@ -9,8 +9,8 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>integration-test-bootstrap-without-files</artifactId>
-    <name>mybatis-metrics [int test]: Fileless</name>
+    <artifactId>integration-test-pure-java</artifactId>
+    <name>mybatis-metrics [int test]: Pure Java</name>
     <packaging>jar</packaging>
 
     <dependencies>
